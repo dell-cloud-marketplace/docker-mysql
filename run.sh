@@ -3,6 +3,9 @@
 VOLUME_HOME="/var/lib/mysql"
 CONF_FILE="/etc/mysql/conf.d/my.cnf"
 
+# Change ownership of VOLUME_HOME
+chown -R mysql:mysql $VOLUME_HOME
+ 
 StartMySQL ()
 {
     /usr/bin/mysqld_safe > /dev/null 2>&1 &
@@ -23,6 +26,7 @@ if [ ${REPLICATION_SLAVE} == "**False**" ]; then
     unset REPLICATION_SLAVE
 fi
 
+# Install MySQL and create the admin user
 if [[ ! -d $VOLUME_HOME/mysql ]]; then
     echo "=> An empty or uninitialized MySQL volume is detected in $VOLUME_HOME"
     echo "=> Installing MySQL ..."
@@ -84,4 +88,4 @@ if [ -n "${REPLICATION_SLAVE}" ]; then
     fi
 fi
 
-exec mysqld_safe
+exec supervisord -n
