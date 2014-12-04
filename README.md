@@ -67,11 +67,12 @@ The admin username can also be set via the `MYSQL_USER` environment variable.
 Start your container with:
 * A named container ("mysql")
 * A host port 3306 mapped to container port 3306 (default MySQL port)
-- One data volume (which will survive a restart or recreation of the container). The MySQL data is available in **/var/lib/mysql** on the host. 
+- Two data volumes (which will survive a restart or recreation of the container). The MySQL data is available in **/var/lib/mysql** on the host. The configuration files are available in **/etc/mysql** on the host.
 - A specific MySQL password for user **admin**. A preset password can be defined instead of a randomly generated one, this is done by setting the environment variable `MYSQL_PASS` to your specific password when running the container.
 
 ```no-highlight
 sudo docker run -d \
+	-v /etc/mysql:/etc/mysql \
 	-v /var/lib/mysql:/var/lib/mysql \
 	-p 3306:3306 \
 	-e MYSQL_PASS="mypass" \
