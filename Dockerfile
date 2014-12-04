@@ -22,6 +22,10 @@ ADD my.cnf /etc/mysql/conf.d/my.cnf
 ADD mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
 ADD supervisord-mysqld.conf /etc/supervisor/conf.d/supervisord-mysqld.conf
 
+# Copy MySQL configuration directory in case an empty volume is specified.
+RUN mkdir -p /tmp/etc/mysql/ && \
+    cp -R /etc/mysql/* /tmp/etc/mysql/ 
+
 # Add MySQL scripts
 ADD create_mysql_admin_user.sh /create_mysql_admin_user.sh
 ADD import_sql.sh /import_sql.sh

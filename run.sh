@@ -1,10 +1,19 @@
 #!/bin/bash
 
-VOLUME_HOME="/var/lib/mysql"
+DATA_DIR="/var/lib/mysql"
+CONFIG_DIR="/etc/mysql"
+TMP_CONFIG_DIR="/tmp/etc/mysql"
 CONF_FILE="/etc/mysql/conf.d/my.cnf"
 
-# Change ownership of VOLUME_HOME
-chown -R mysql:mysql $VOLUME_HOME
+# Test if CONFIG_DIR has content.
+if [ ! "$(ls -A $CONFIG_DIR)" ]; then
+    # Copy the configuration that we generated within the container to the
+    # empty CONFIG_DIR.
+    cp -r $TMP_CONFIG_DIR/* $CONFIG_DIR
+fi
+
+# Change ownership of MySQL volumes
+chown -R mysql:mysql $DATA_DIR $CONFIG_DIR
  
 StartMySQL ()
 {
@@ -27,8 +36,8 @@ if [ ${REPLICATION_SLAVE} == "**False**" ]; then
 fi
 
 # Install MySQL and create the admin user
-if [[ ! -d $VOLUME_HOME/mysql ]]; then
-    echo "=> An empty or uninitialized MySQL volume is detected in $VOLUME_HOME"
+if [[ ! -d $DATA_DIR/mysql ]]; then
+    echo "=> An empty or uninitialized MySQL volume is detected in $DATA_DIR"
     echo "=> Installing MySQL ..."
     if [ ! -f /usr/share/mysql/my-default.cnf ] ; then
         cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
