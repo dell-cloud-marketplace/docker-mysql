@@ -7,7 +7,7 @@ RUN apt-get update
 # Set the environment variable for package install
 ENV DEBIAN_FRONTEND noninteractive
 
-# Install memcached
+# Install MySQL 
 RUN apt-get -y install \
   mysql-server-5.6 \
   pwgen \ 
@@ -28,11 +28,9 @@ ADD import_sql.sh /import_sql.sh
 ADD run.sh /run.sh
 RUN chmod 755 /*.sh
 
-# Exposed ENV
+# Exposed ENVIRONMENT VARIABLES
 ENV MYSQL_USER admin
 ENV MYSQL_PASS **Random**
-
-# Replication ENV
 ENV REPLICATION_MASTER **False**
 ENV REPLICATION_SLAVE **False**
 ENV REPLICATION_USER replica
