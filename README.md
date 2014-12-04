@@ -1,143 +1,178 @@
-docker-mysql
+#docker-mysql
 ================
 
-Base docker image to run a MySQL database server
+This is a base Docker image to run a [MySQL](http://www.mysql.com/) database server.
+
+## Components
+The software stack comprises the following component details:
+
+Name       | Version    | Description
+-----------|------------|------------------------------
+Ubuntu     | Trusty     | Operating system
+MySQL      | 5.6        | Database
+
+## Usage
+
+### Start the Container
+To start your container with:
+
+* A named container ("mysql")
+* Host port 3306 mapped to container port 3306 (default MySQL port)
+
+Do:
+```no-highlight
+sudo docker run -d -p 3306:3306 --name mysql dell/mysql
+```
+
+A new admin user, with all privileges, will be created in MySQL with a random password. To get the password, check the container logs (```sudo docker logs mysql```). You will see output like the following:
 
 
-MySQL version
--------------
+```no-highlight
+========================================================================
+You can now connect to this MySQL Server using:
 
-MySQL 5.6
+    mysql -uadmin -pcPeW8P7qr0Cs -h<host> -P<port>
 
+Please remember to change the above password as soon as possible!
+MySQL user 'root' has no password but only allows local connections
+========================================================================
+```
 
-Usage
------
-
-To create the image `docker-mysql`, execute the following command on the docker-mysql folder:
-
-        docker build -t dell/mysql .
-
-To run the image and bind to port 3306:
-
-        docker run -d -p 3306:3306 dell/mysql
-
-The first time that you run your container, a new user `admin` with all privileges 
-will be created in MySQL with a random password. To get the password, check the logs
-of the container by running:
-
-        docker logs <CONTAINER_ID>
-
-You will see an output like the following:
-
-        ========================================================================
-        You can now connect to this MySQL Server using:
-
-            mysql -uadmin -p47nnf4FweaKu -h<host> -P<port>
-
-        Please remember to change the above password as soon as possible!
-        MySQL user 'root' has no password but only allows local connections
-        ========================================================================
-
-In this case, `47nnf4FweaKu` is the password allocated to the `admin` user.
+In this case, `cPeW8P7qr0Cs` is the password allocated to the `admin` user.
 
 Remember that the `root` user has no password but it's only accessible from within the container.
 
-You can now test your deployment:
+You can then connect to MySQL using:
 
-        mysql -uadmin -p
+```no-highlight
+mysql -uadmin -pcPeW8P7qr0Cs -h127.0.0.1 -P3306
+```
 
-Done!
+### Advanced Example 1
+To start your image with a specific MySQL admin password, instead of a randomly generated one, set environment variable `MYSQL_PASS` when running the container:
 
+```no-highlight
+sudo docker run -d -p 3306:3306 -e MYSQL_PASS="mypass" dell/mysql
+```
 
-Setting a specific password for the admin account
--------------------------------------------------
+You can then connect to MySQL using:
 
-If you want to use a preset password instead of a random generated one, you can
-set the environment variable `MYSQL_PASS` to your specific password when running the container:
-
-        docker run -d -p 3306:3306 -e MYSQL_PASS="mypass" dell/mysql
-
-You can now test your deployment:
-
-        mysql -uadmin -p"mypass"
+```no-highlight
+mysql -uadmin -pmypass -h127.0.0.1 -P3306
+```
 
 The admin username can also be set via the `MYSQL_USER` environment variable.
 
+### Advanced Example 2
 
-Mounting the database file volume
----------------------------------
+Start your container with:
+* A named container ("mysql")
+* A host port 3306 mapped to container port 3306 (default MySQL port)
+- One data volume (which will survive a restart or recreation of the container). The MySQL data is available in **/var/lib/mysql** on the host. 
+- A specific MySQL password for user **admin**. A preset password can be defined instead of a randomly generated one, this is done by setting the environment variable `MYSQL_PASS` to your specific password when running the container.
 
-In order to persist the database data, you can mount a local folder from the host 
-on the container to store the database files. To do so:
+```no-highlight
+sudo docker run -d \
+	-v /var/lib/mysql:/var/lib/mysql \
+	-p 3306:3306 \
+	-e MYSQL_PASS="mypass" \
+	--name mysql dell/mysql
+```
+      
+## Replication - Master/Slave
 
-        docker run -d -v /path/in/host:/var/lib/mysql dell/mysql /bin/bash -c "/usr/bin/mysql_install_db"
+In order to use MySQL replication, start two containers, respectively master and slave with the following parameters: 
 
-This will mount the local folder `/path/in/host` inside the docker in `/var/lib/mysql` (where MySQL will store the database files by default). `mysql_install_db` creates the initial database structure.
+Start the master container with:
+* A named container ("master")
+* A host port 3306 mapped to container port 3306
+* Replication in master-mode enabled by setting `REPLICATION_MASTER` to `true`. 
+- Each slave must connect to the master using a MySQL user name and password. To do so, a MySQL user granted to perform replication is created on the master that the slave can use to connect. Preset login and password can be defined instead of the default ones by setting `REPLICATION_USER` and `REPLICATION_PASS`. The default value is `replica:replica`. 
 
-Remember that this will mean that your host must have `/path/in/host` available when you run your docker image!
+```no-highlight
+sudo docker run -d \
+	-e REPLICATION_MASTER=true \
+	-e REPLICATION_USER="rep_user" \
+	-e REPLICATION_PASS="mypass" \
+	-p 3306:3306 \
+	--name master \
+	dell/mysql
+```
 
-After this you can start your mysql image but this time using `/path/in/host` as the database folder:
+Start the slave container with:
+* A named container ("slave")
+* A host port 3307 mapped to container port 3306
+* Replication in slave-mode enabled by setting `REPLICATION_SLAVE` to `true`. 
+* A link to the master container with the **mysql** alias 
 
-        docker run -d -p 3306:3306 -v /path/in/host:/var/lib/mysql dell/mysql
+```no-highlight
+sudo docker run -d -e REPLICATION_SLAVE=true -p 3307:3306 --link master:mysql --name slave dell/mysql
+```
 
+You can then connect to your MySQL master and slave nodes respectively on port 3306 and 3307.
 
-Mounting the database file volume from other containers
-------------------------------------------------------
+### Test the replication
 
-Another way to persist the database data is to store database files in another container.
-To do so, first create a container that holds database files:
+### Check MySQL master status
 
-    docker run -d -v /var/lib/mysql --name db_vol -p 22:22 tutum/ubuntu-trusty 
+Connect to your MySQL master node and run:
 
-This will create a new ssh-enabled container and use its folder `/var/lib/mysql` to store MySQL database files. 
-You can specify any name of the container by using `--name` option, which will be used in next step.
+```no-highlight
+SHOW MASTER STATUS\G
+```
+You will see output like the following:
 
-After this you can start your MySQL image using volumes in the container created above (put the name of container in `--volumes-from`)
+```no-highlight
+mysql> SHOW MASTER STATUS\G
+*************************** 1. row ***************************
+             File: master-bin.000002
+         Position: 1307
+     Binlog_Do_DB: test
+ Binlog_Ignore_DB: manual, mysql
+Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
+1 row in set (0.00 sec)
+```
 
-    docker run -d --volumes-from db_vol -p 3306:3306 ddell/mysql
+### Create a new database 
 
+On the master, create a new database to test the replication:
 
-Migrating an existing MySQL Server
-----------------------------------
+```no-highlight
+mysql> CREATE DATABASE <database_name>
+```
 
-In order to migrate your current MySQL server, perform the following commands from your current server:
+### Check MySQL node status
 
-To dump your databases structure:
+Connect to your MySQL slave node and run:
 
-        mysqldump -u<user> -p --opt -d -B <database name(s)> > /tmp/dbserver_schema.sql
+```no-highlight
+SHOW SLAVE STATUS\G
+```
 
-To dump your database data:
+You will see output like the following:
 
-        mysqldump -u<user> -p --quick --single-transaction -t -n -B <database name(s)> > /tmp/dbserver_data.sql
+```no-highlight
+mysql>  SHOW SLAVE STATUS\G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 172.17.5.69
+                  Master_User: rep_user
+                  Master_Port: 3306
+```
 
-To import a SQL backup which is stored for example in the folder `/tmp` in the host, run the following:
+### Check the database replication
 
-        sudo docker run -d -v /tmp:/tmp dell/mysql /bin/bash -c "/import_sql.sh <user> <pass> /tmp/<dump.sql>"
+List databases on the slave :
 
-Where `<user>` and `<pass>` are the database username and password set earlier and `<dump.sql>` is the name of the SQL file to be imported.
+```no-highlight
+mysql>  SHOW DATABASES;
+```
+Check that the database created on the master node has been correctly replicated
+ 
+ ## Reference
 
+### Image Details
 
-Replication - Master/Slave
--------------------------
-To use MySQL replication, please set environment variable `REPLICATION_MASTER`/`REPLICATION_SLAVE` to `ture`. Also, on master side, you may want to specify `REPLICATION_USER` and `REPLICATION_PASS` for the account to perform replication, the default value is `replica:replica`
+Based on [tutum/mysql](https://github.com/tutumcloud/tutum-docker-mysql)
 
-Examples:
-- Master MySQL
-- 
-        docker run -d -e REPLICATION_MASTER=true -e REPLICATION_PASS=mypass -p 3306:3306 --name mysql dell/mysql
-
-- Example on Slave MySQL:
-- 
-        docker run -d -e REPLICATION_SLAVE=true -p 3307:3306 --link mysql:mysql dell/mysql
-
-Now, you can access port `3306` and `3307` for the master/slave mysql
-Environment variables
----------------------
-
-`MYSQL_USER`: Set a specific username for the admin account (default 'admin')
-`MYSQL_PASS`: Set a specific password for the admin account.
-
-Compatibility Issues
---------------------
-
-- Volume created by MySQL 5.6 cannot be used in MariaDB images
+Pre-built Image | [https://registry.hub.docker.com/u/dell/mysql](https://registry.hub.docker.com/u/dell/mysql) 
