@@ -204,7 +204,7 @@ mysql>  SHOW DATABASES;
 ```
 Check that the database **test_replication_db** created on the master node has been correctly replicated
  
- ## Reference
+## Reference
 
 ### Image Details
 
