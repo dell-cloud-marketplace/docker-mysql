@@ -80,6 +80,12 @@ sudo docker run -d \
 	-e MYSQL_PASS="mypass" \
 	--name mysql dell/mysql
 ```
+
+You can then connect to MySQL using:
+
+```no-highlight
+mysql -uadmin -pmypass -h127.0.0.1 -P3306
+```
       
 ## Replication - Master/Slave
 
