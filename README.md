@@ -152,9 +152,6 @@ mysql> SHOW MASTER STATUS\G
  Binlog_Ignore_DB: manual, mysql
 Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
 1 row in set (0.00 sec)
-...
-..
-.
 ```
 
 ### Create a new database 
@@ -189,9 +186,9 @@ mysql>  SHOW SLAVE STATUS\G
                   Master_Host: 172.17.5.69
                   Master_User: rep_user
                   Master_Port: 3306
-                  ...
-                  ..
-                  .
+                               ...
+                               ..
+                               .
 ```
 
 ### Check the database replication
