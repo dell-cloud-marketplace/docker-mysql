@@ -48,10 +48,12 @@ mysql -uadmin -pcPeW8P7qr0Cs -h127.0.0.1 -P3306
 ```
 
 ### Advanced Example 1
-To start your image with a specific MySQL admin password, instead of a randomly generated one, set environment variable `MYSQL_PASS` when running the container:
+* A named container ("mysql")
+* A host port 3306 mapped to container port 3306 (default MySQL port)
+- A specific MySQL password for user **admin**. A preset password can be defined instead of a randomly generated one, this is done by setting the environment variable `MYSQL_PASS` to your specific password when running the container.
 
 ```no-highlight
-sudo docker run -d -p 3306:3306 -e MYSQL_PASS="mypass" dell/mysql
+sudo docker run -d -p 3306:3306 -e MYSQL_PASS="mypass" --name mysql dell/mysql
 ```
 
 You can then connect to MySQL using:
@@ -94,6 +96,7 @@ sudo docker run -d \
 	-e REPLICATION_MASTER=true \
 	-e REPLICATION_USER="rep_user" \
 	-e REPLICATION_PASS="mypass" \
+	-e MYSQL_PASS="mypass" \
 	-p 3306:3306 \
 	--name master \
 	dell/mysql
@@ -106,7 +109,14 @@ Start the slave container with:
 * A link to the master container with the **mysql** alias 
 
 ```no-highlight
-sudo docker run -d -e REPLICATION_SLAVE=true -p 3307:3306 --link master:mysql --name slave dell/mysql
+sudo docker run -d \
+	-e REPLICATION_SLAVE=true \
+	-p 3307:3306 \
+	--link master:mysql \
+	-e MYSQL_PASS="mypass" \
+	--name slave \
+	dell/mysql
+
 ```
 
 You can then connect to your MySQL master and slave nodes respectively on port 3306 and 3307.
@@ -115,7 +125,13 @@ You can then connect to your MySQL master and slave nodes respectively on port 3
 
 ### Check MySQL master status
 
-Connect to your MySQL master node and run:
+Connect to your MySQL master node on port **3306** using:
+
+```no-highlight
+mysql -uadmin -pmypass -h127.0.0.1 -P3306
+```
+
+and run:
 
 ```no-highlight
 SHOW MASTER STATUS\G
@@ -131,6 +147,9 @@ mysql> SHOW MASTER STATUS\G
  Binlog_Ignore_DB: manual, mysql
 Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
 1 row in set (0.00 sec)
+...
+..
+.
 ```
 
 ### Create a new database 
@@ -138,12 +157,19 @@ Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
 On the master, create a new database to test the replication:
 
 ```no-highlight
-mysql> CREATE DATABASE <database_name>
+mysql> CREATE DATABASE test_replication_db;
 ```
 
 ### Check MySQL node status
 
-Connect to your MySQL slave node and run:
+Connect to your MySQL slave node on port **3307** using:
+
+```no-highlight
+mysql -uadmin -pmypass -h127.0.0.1 -P3307
+```
+
+and run:
+
 
 ```no-highlight
 SHOW SLAVE STATUS\G
@@ -158,6 +184,9 @@ mysql>  SHOW SLAVE STATUS\G
                   Master_Host: 172.17.5.69
                   Master_User: rep_user
                   Master_Port: 3306
+                  ...
+                  ..
+                  .
 ```
 
 ### Check the database replication
@@ -167,7 +196,7 @@ List databases on the slave :
 ```no-highlight
 mysql>  SHOW DATABASES;
 ```
-Check that the database created on the master node has been correctly replicated
+Check that the database **test_replication_db** created on the master node has been correctly replicated
  
  ## Reference
 
