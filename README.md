@@ -122,7 +122,6 @@ sudo docker run -d \
 	-e MYSQL_PASS="mypass" \
 	--name slave \
 	dell/mysql
-
 ```
 
 You can then connect to your MySQL master and slave nodes respectively on port 3306 and 3307.
