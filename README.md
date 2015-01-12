@@ -126,9 +126,9 @@ sudo docker run -d \
 
 You can then connect to your MySQL master and slave nodes respectively on port 3306 and 3307.
 
-### Test the replication
+### Test the Replication
 
-### Check MySQL master status
+#### Check MySQL Master Status
 
 Connect to your MySQL master node on port **3306** using:
 
@@ -154,7 +154,7 @@ Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
 1 row in set (0.00 sec)
 ```
 
-### Create a new database 
+#### Create a New Database 
 
 On the master, create a new database to test the replication:
 
@@ -162,7 +162,7 @@ On the master, create a new database to test the replication:
 mysql> CREATE DATABASE test_replication_db;
 ```
 
-### Check MySQL node status
+#### Check MySQL Node Status
 
 Connect to your MySQL slave node on port **3307** using:
 
@@ -191,7 +191,7 @@ mysql>  SHOW SLAVE STATUS\G
                                .
 ```
 
-### Check the database replication
+#### Check the Database Replication
 
 List databases on the slave :
 
