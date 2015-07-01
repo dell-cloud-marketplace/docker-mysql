@@ -202,6 +202,17 @@ Check that the database **test_replication_db** created on the master node has b
  
 ## Reference
 
+### Environmental Variables
+
+Variable           | Default   | Description
+-------------------|-----------|-----------------------------------------------------------
+MYSQL_USER         | admin     | The administrator user name
+MYSQL_PASS         | *random*  | Password for the MySQL administrator user
+REPLICATION_MASTER | **False** | Override the default to run MySQL as a replication master
+REPLICATION_SLAVE  | **False** | Override the default to run MySQL as a replication slave
+REPLICATION_USER   | replica   | The replication user name
+REPLICATION_PASS   | replica   | The replication password
+
 ### Image Details
 
 Based on [tutum/mysql](https://github.com/tutumcloud/tutum-docker-mysql)
