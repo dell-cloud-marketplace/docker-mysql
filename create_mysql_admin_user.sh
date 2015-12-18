@@ -10,10 +10,6 @@ while [[ RET -ne 0 ]]; do
     RET=$?
 done
 
-if [ "$MYSQL_PASS" = "**Random**" ]; then
-    unset MYSQL_PASS
-fi
-
 PASS=${MYSQL_PASS:-$(pwgen -s 12 1)}
 _word=$( [ ${MYSQL_PASS} ] && echo "preset" || echo "random" )
 echo "=> Creating MySQL user ${MYSQL_USER} with ${_word} password"
